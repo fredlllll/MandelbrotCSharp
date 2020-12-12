@@ -83,6 +83,16 @@ namespace MandelbrotCSharp
             }
         }
 
+        private bool EndCondition(Complex z)
+        {
+            //return (z.Real * z.Real + z.Imaginary * z.Imaginary) > limit; //real one
+            return Math.Max(z.Real, z.Imaginary) > limit;//looks same as real, no streaks or glitches
+            //return z.Real * z.Imaginary > limitSquared; //white streaks
+            //return Math.Min(z.Real,z.Imaginary) > limit; //lotta glitching
+            //return Math.Abs(Math.Abs(z.Real) - Math.Abs(z.Imaginary)) <  Math.Pow(0.01,Math.Max(1,z.Magnitude)); //splintered
+            //return Math.Abs(z.Real - z.Imaginary) <0.01;
+        }
+
         private void Iterate()
         {
             int perTile = field.Length / Environment.ProcessorCount;
@@ -106,7 +116,7 @@ namespace MandelbrotCSharp
                         for (int j = 0; j < iterations; j++)
                         {
                             z = z * z + c;
-                            if (z.Real * z.Imaginary > limitSquared)
+                            if (EndCondition(z))
                             {
                                 p.i = j;
                                 break;
