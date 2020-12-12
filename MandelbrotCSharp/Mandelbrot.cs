@@ -56,7 +56,7 @@ namespace MandelbrotCSharp
             Task[] tasks = new Task[Environment.ProcessorCount];
             for (int tileIndex = 0; tileIndex < tasks.Length; tileIndex++)
             {
-                int yFrom = tileIndex* perTile;
+                int yFrom = tileIndex * perTile;
                 int yTo = yFrom + perTile;
                 if (tileIndex == tasks.Length - 1)
                 {
@@ -77,7 +77,7 @@ namespace MandelbrotCSharp
                 tasks[tileIndex] = t;
                 t.Start();
             }
-            foreach(var tt in tasks)
+            foreach (var tt in tasks)
             {
                 tt.Wait();
             }
@@ -89,7 +89,7 @@ namespace MandelbrotCSharp
             Task[] tasks = new Task[Environment.ProcessorCount];
             for (int tileIndex = 0; tileIndex < tasks.Length; tileIndex++)
             {
-                int from = perTile * tileIndex;
+                int from = tileIndex * perTile;
                 int to = from + perTile;
                 if (tileIndex == tasks.Length - 1)
                 {
