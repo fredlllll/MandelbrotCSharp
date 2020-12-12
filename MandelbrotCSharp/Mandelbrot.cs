@@ -50,14 +50,13 @@ namespace MandelbrotCSharp
             double xDiff = maxX - minX;
             double yDiff = maxY - minY;
 
-            int pixels = imageWidth * imageHeight;
             field = new Pixel[imageWidth * imageHeight];
 
             int perTile = imageHeight / Environment.ProcessorCount;
             Task[] tasks = new Task[Environment.ProcessorCount];
             for (int tileIndex = 0; tileIndex < tasks.Length; tileIndex++)
             {
-                int yFrom = perTile * tileIndex;
+                int yFrom = tileIndex* perTile;
                 int yTo = yFrom + perTile;
                 if (tileIndex == tasks.Length - 1)
                 {
@@ -77,6 +76,10 @@ namespace MandelbrotCSharp
                 });
                 tasks[tileIndex] = t;
                 t.Start();
+            }
+            foreach(var tt in tasks)
+            {
+                tt.Wait();
             }
         }
 
