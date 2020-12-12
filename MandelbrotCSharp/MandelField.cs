@@ -2,6 +2,7 @@
 using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Numerics;
 using System.Threading.Tasks;
 
@@ -27,6 +28,7 @@ namespace MandelSpeedTest
         Pixel[] field = null;
         int currentIteration = 0;
         bool running = false;
+        readonly Stopwatch swIteration = new Stopwatch(), swConversion = new Stopwatch();
 
         //changeable stuff
         int imageWidth;
@@ -119,7 +121,7 @@ namespace MandelSpeedTest
         private void Iterate()
         {
             Console.WriteLine("Iteration " + currentIteration);
-
+            swIteration.Start();
             int perTile = field.Length / Environment.ProcessorCount;
             Task[] tasks = new Task[Environment.ProcessorCount];
             for (int j = 0; j < tasks.Length; j++)
@@ -154,6 +156,7 @@ namespace MandelSpeedTest
             {
                 t.Wait();
             }
+            swIteration.Stop();
 
             currentIteration++;
         }
@@ -161,6 +164,8 @@ namespace MandelSpeedTest
         readonly ArrayPool<byte> arrayPoolByte = new ArrayPool<byte>();
         private byte[] GetValues()
         {
+            swConversion.Start();
+
             int pixels = imageWidth * imageHeight;
             byte[] vals = arrayPoolByte.Get(pixels);
 
@@ -202,6 +207,8 @@ namespace MandelSpeedTest
                 t.Wait();
             }
 
+            swConversion.Stop();
+
             return vals;
         }
 
@@ -231,7 +238,6 @@ namespace MandelSpeedTest
                     arrayPoolByte.Put(imgValues);
                     img.SaveAsPng("brot_" + currentIteration + ".png");
                 }
-
 
                 lock (startedImageSavingTasks)
                 {
@@ -293,6 +299,8 @@ namespace MandelSpeedTest
                 }
             }
             running = false;
+            Console.WriteLine("Total Iteration Time: " + swIteration.Elapsed.TotalMilliseconds + "ms");
+            Console.WriteLine("Total Conversion Time: " + swConversion.Elapsed.TotalMilliseconds + "ms");
         }
     }
 }

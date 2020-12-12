@@ -35,7 +35,7 @@ namespace MandelSpeedTest
             sw.Start();
             MakeMandel();
             sw.Stop();
-            Console.WriteLine("Elapsed: " + sw.Elapsed);
+            Console.WriteLine("Elapsed: " + sw.Elapsed.TotalMilliseconds + "ms");
             Console.WriteLine("Use 'ffmpeg -start_number " + settings.IterationOffset + " -r 30/1 -i brot_%d.png -c:v libx264 -crf 10 -vf fps=30 out.mp4' to process frames into video");
             //Console.WriteLine("Press Enter to exit");
             //Console.ReadLine();
