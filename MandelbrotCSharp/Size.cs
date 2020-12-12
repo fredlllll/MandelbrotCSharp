@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MandelSpeedTest
+namespace MandelbrotCSharp
 {
     public struct Size : IEquatable<Size>
     {

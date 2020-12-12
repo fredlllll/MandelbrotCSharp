@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace MandelSpeedTest
+namespace MandelbrotCSharp
 {
     class ArrayPool<T>
     {

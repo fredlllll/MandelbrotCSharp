@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace MandelSpeedTest
+namespace MandelbrotCSharp
 {
     class ObjectPool<T, HashType>
     {

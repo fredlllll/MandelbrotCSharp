@@ -3,12 +3,12 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.IO;
 
-namespace MandelSpeedTest
+namespace MandelbrotCSharp
 {
     class Program
     {
         static MandelSettings settings;
-        static void MakeMandel()
+        static void LoadSettings()
         {
             settings = new MandelSettings();
             if (File.Exists("settings.json"))
@@ -20,26 +20,37 @@ namespace MandelSpeedTest
                 File.WriteAllText("settings.json", JsonSerializer.Serialize(settings, new JsonSerializerOptions() { WriteIndented = true }));
             }
             MandelSettings.Instance = settings;
-            /*double xmin = -2.2;
-            double xmax = 0.7;
-            double ymin = -1.5;
-            double ymax = 1.5;*/
+        }
+
+        static void MakeMandelField()
+        {
             var f = new MandelField(settings.ImageWidth, settings.ImageHeight, settings.Iterations, settings.IterationOffset, settings.Limit, settings.Xmin, settings.Xmax, settings.Ymin, settings.Ymax);
             f.Run();
         }
 
+        static void MakeMandelbrot()
+        {
+            var b = new Mandelbrot(settings.ImageWidth, settings.ImageHeight, settings.Iterations, settings.Limit, settings.Xmin, settings.Xmax, settings.Ymin, settings.Ymax);
+            b.Run();
+        }
+
         static void Main(string[] args)
         {
-            Console.WriteLine("Cores to use: " + Environment.ProcessorCount);
+            LoadSettings();
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            MakeMandel();
+            if (settings.ProcessingType.Equals("brot"))
+            {
+                MakeMandelbrot();
+            }
+            else if (settings.ProcessingType.Equals("field"))
+            {
+                MakeMandelField();
+                Console.WriteLine("Use 'ffmpeg -start_number " + settings.IterationOffset + " -r 30/1 -i brot_%d.png -c:v libx264 -crf 10 -vf fps=30 out.mp4' to process frames into video");
+            }
+            else { throw new Exception("unknown processing type: " + settings.ProcessingType); }
             sw.Stop();
-            Console.WriteLine("Elapsed: " + sw.Elapsed.TotalMilliseconds + "ms");
-            Console.WriteLine("Use 'ffmpeg -start_number " + settings.IterationOffset + " -r 30/1 -i brot_%d.png -c:v libx264 -crf 10 -vf fps=30 out.mp4' to process frames into video");
-            //Console.WriteLine("Press Enter to exit");
-            //Console.ReadLine();
-            //ffmpeg -start_number 325 -r 30/1 -i brot_%02d.png -c:v libx264 -crf 10  -vf fps=30 out.mp4
+            Console.WriteLine("Total Elapsed: " + sw.Elapsed.TotalMilliseconds + "ms");
         }
     }
 }

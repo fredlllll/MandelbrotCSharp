@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Numerics;
 using System.Threading.Tasks;
 
-namespace MandelSpeedTest
+namespace MandelbrotCSharp
 {
     class MandelField
     {
@@ -212,52 +212,15 @@ namespace MandelSpeedTest
             return vals;
         }
 
-        readonly List<Task> imageSavingTasks = new List<Task>();
-        readonly List<Task> startedImageSavingTasks = new List<Task>();
-        //readonly ObjectPool<Image<L8>, Size> imagePool = new ObjectPool<Image<L8>, Size>((size) => new Image<L8>(size.x, size.y), (img) => new Size(img.Width, img.Height));
+        ImageSaver imageSaver = null;
         private void SaveImage()
         {
-            var imgValues = GetValues();
-            int currentIteration = this.currentIteration;
-            Task t = new Task(() =>
+            if (imageSaver == null)
             {
-                /*var img = imagePool.Get(new Size(imageWidth, imageHeight));
-                var data = MemoryMarshal.Cast<byte, L8>(new ReadOnlySpan<byte>(imgValues));
-                int count = imageWidth * imageHeight;
-                data = data.Slice(0, count);
-                Buffer2D<byte> pixelBuffer = img.Frames.RootFrame.PixelBuffer;
-                data.CopyTo(pixelBuffer.FastMemoryGroup);
-                arrayPoolByte.Put(imgValues);
-                img.SaveAsPng("brot_" + currentIteration + ".png");
-                imagePool.Put(img);*/
-
-                //cant pool image cause imagesharp doesnt allow reuse of images
-
-                using (var img = Image.LoadPixelData<L8>(imgValues, imageWidth, imageHeight))
-                {
-                    arrayPoolByte.Put(imgValues);
-                    img.SaveAsPng("brot_" + currentIteration + ".png");
-                }
-
-                lock (startedImageSavingTasks)
-                {
-                    startedImageSavingTasks.RemoveAll((t) => (t.Id == Task.CurrentId));
-                }
-                Console.WriteLine("Saved Iteration " + currentIteration);
-            });
-            imageSavingTasks.Add(t);
-            if (imageSavingTasks.Count >= MandelSettings.Instance.AccumulateImageCount)
-            {
-                foreach (var tt in imageSavingTasks)
-                {
-                    tt.Start();
-                    lock (startedImageSavingTasks)
-                    {
-                        startedImageSavingTasks.Add(tt);
-                    }
-                }
-                imageSavingTasks.Clear();
+                imageSaver = new ImageSaver(arrayPoolByte);
             }
+            var imgValues = GetValues();
+            imageSaver.Enqueue(imgValues, imageWidth, imageHeight, "brot_" + currentIteration + ".jpg");
         }
 
         public void Run()
@@ -278,26 +241,7 @@ namespace MandelSpeedTest
                 Iterate();
                 SaveImage();
             }
-            if (imageSavingTasks.Count > 0)
-            {
-                foreach (var tt in imageSavingTasks)
-                {
-                    tt.Start();
-                    lock (startedImageSavingTasks)
-                    {
-                        startedImageSavingTasks.Add(tt);
-                    }
-                }
-                imageSavingTasks.Clear();
-            }
-            if (startedImageSavingTasks.Count > 0)
-            {
-                var tasksToWaitFor = startedImageSavingTasks.ToArray();
-                foreach (var tt in tasksToWaitFor)
-                {
-                    tt.Wait();
-                }
-            }
+            imageSaver.Wait();
             running = false;
             Console.WriteLine("Total Iteration Time: " + swIteration.Elapsed.TotalMilliseconds + "ms");
             Console.WriteLine("Total Conversion Time: " + swConversion.Elapsed.TotalMilliseconds + "ms");
